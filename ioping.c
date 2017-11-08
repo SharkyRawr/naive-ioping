@@ -74,7 +74,7 @@ int main(int argc, char** argv) {
 					"graph_scale yes\n"
 					"graph_category disk\n"
 					"graph_info Runs a naive IO latency test with nanosecond accuracy (usually only as accurate as the platform allows), source code available at https://github.com/vmp32k/naive-ioping\n"
-					"graph_vlabel nanoseconds\n"
+					"graph_vlabel latency in ms\n"
 					"ms.label milliseconds\n");
 			exit(0);
 		}
