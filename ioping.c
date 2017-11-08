@@ -65,6 +65,8 @@ int main(int argc, char** argv) {
 	if(argc > 1) {
 		if(strcmp(argv[1], "config") == 0) {
 			printf("graph_title Naive IO latency\n"
+					"graph_args --base 1000 -l 0\n"
+					"graph_scale no\n"
 					"graph_category disk\n"
 					"graph_info Runs a naive IO latency test and shows the results in nanoseconds, source code available at https://github.com/vmp32k/naive-ioping\n"
 					"graph_vlabel nanoseconds\n"
