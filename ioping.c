@@ -15,12 +15,13 @@
 
 #include "random_bytes.h"
 
-static struct timespec tstart, tend;
-
 typedef struct {
 	double diffsec;
 	double diffnano;
 } timediff_t;
+
+static struct timespec tstart, tend;
+static void* aligned_buffer;
 
 timediff_t *do_ping() {
 	clock_gettime(CLOCK_MONOTONIC, &tstart);
@@ -31,7 +32,7 @@ timediff_t *do_ping() {
 		exit(1);
 	}
 
-	ssize_t byteswritten = write(fd, ___rand_bin, ___rand_bin_len);
+	ssize_t byteswritten = write(fd, aligned_buffer, ___rand_bin_len);
 	if(byteswritten == -1) {
 		unlink(PING_PATH);
 		fprintf(stderr, "Unable to write bytes!\nerrno: %d %s\n", errno, strerror(errno));
@@ -56,6 +57,10 @@ timediff_t *do_ping() {
 }
 
 int main(int argc, char** argv) {
+	if( posix_memalign(&aligned_buffer, ___rand_bin_len, ___rand_bin_len) != 0) {
+		fprintf(stderr, "Unable to align buffer!\nerrno: %d %s\n", errno, strerror(errno));
+		exit(1);
+	}
 
 	if(argc > 1) {
 		if(strcmp(argv[1], "config") == 0) {
