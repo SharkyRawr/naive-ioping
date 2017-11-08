@@ -1,3 +1,4 @@
 cmake_minimum_required (VERSION 3.0.0)
 project (ioping)
+add_compile_options(-O2 -std=gnu11 -D_GNU_SOURCE -static -ggdb)
 add_executable (ioping ioping.c)
