@@ -1,5 +1,6 @@
 #define NUM_IOPING_RUNS 3
 #define SLEEP_BETWEEN_RUNS 1 // in seconds
+#define PING_PATH "/var/tmp/test.ping"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,7 +24,7 @@ typedef struct {
 
 timediff_t *do_ping() {
 	clock_gettime(CLOCK_MONOTONIC, &tstart);
-	int fd = open("test.ping", O_CREAT|O_WRONLY|O_DIRECT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+	int fd = open(PING_PATH, O_CREAT|O_WRONLY|O_DIRECT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	if(fd == -1) {
 		fprintf(stderr, "Unable to open test.ping file!\n");
 		fprintf(stderr, "Errno: %d %s\n", errno, strerror(errno));
@@ -32,14 +33,14 @@ timediff_t *do_ping() {
 
 	ssize_t byteswritten = write(fd, ___rand_bin, ___rand_bin_len);
 	if(byteswritten == -1) {
-		unlink("test.ping");
+		unlink(PING_PATH);
 		fprintf(stderr, "Unable to write bytes!\nerrno: %d %s\n", errno, strerror(errno));
 		exit(1);
 	}
 	close(fd);
 	clock_gettime(CLOCK_MONOTONIC, &tend);
 
-	unlink("test.ping");
+	unlink(PING_PATH);
 	//fprintf(stderr, "wrote: %ld\n", byteswritten);
 
 	timediff_t *delta = (timediff_t*)malloc(sizeof(timediff_t));
