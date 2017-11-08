@@ -71,11 +71,11 @@ int main(int argc, char** argv) {
 		if(strcmp(argv[1], "config") == 0) {
 			printf("graph_title Naive IO latency\n"
 					"graph_args --base 1000 -l 0\n"
-					"graph_scale no\n"
+					"graph_scale yes\n"
 					"graph_category disk\n"
-					"graph_info Runs a naive IO latency test and shows the results in nanoseconds, source code available at https://github.com/vmp32k/naive-ioping\n"
+					"graph_info Runs a naive IO latency test with nanosecond accuracy (usually only as accurate as the platform allows), source code available at https://github.com/vmp32k/naive-ioping\n"
 					"graph_vlabel nanoseconds\n"
-					"nano.label nanoseconds\n");
+					"ms.label milliseconds\n");
 			exit(0);
 		}
 		return 0;
@@ -95,8 +95,8 @@ int main(int argc, char** argv) {
 		sleep(SLEEP_BETWEEN_RUNS);
 	}
 
-	total = total / NUM_IOPING_RUNS;	
-	printf("nano.value %0.lf\n", total);
+	total = (total / (double)NUM_IOPING_RUNS) * 1e-6;
+	printf("ms.value %lf\n", total);
 
 	for(int i = 0; i < NUM_IOPING_RUNS; ++i) {
 		free(runs[i]);
