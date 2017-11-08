@@ -45,7 +45,7 @@ make
 
 ## Munin support: ##
 
-Simply drop the binary in your plugins directoy and restart munin-node:
+Simply drop the binary in your plugins directory and restart munin-node:
 
 ```bash
 cp -v ioping /etc/munin/plugins/
