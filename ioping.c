@@ -62,6 +62,11 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
+	if( memcpy(aligned_buffer, ___rand_bin, ___rand_bin_len) == NULL) {
+		fprintf(stderr, "Unable to memcpy to align buffer!\nerrno: %d %s\n", errno, strerror(errno));
+		exit(1);
+	}
+
 	if(argc > 1) {
 		if(strcmp(argv[1], "config") == 0) {
 			printf("graph_title Naive IO latency\n"
