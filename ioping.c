@@ -27,20 +27,20 @@ timediff_t *do_ping() {
 	if(fd == -1) {
 		fprintf(stderr, "Unable to open test.ping file!\n");
 		fprintf(stderr, "Errno: %d %s\n", errno, strerror(errno));
-		return NULL;
+		exit(1);
 	}
 
 	ssize_t byteswritten = write(fd, ___rand_bin, ___rand_bin_len);
 	if(byteswritten == -1) {
 		unlink("test.ping");
 		fprintf(stderr, "Unable to write bytes!\nerrno: %d %s\n", errno, strerror(errno));
-		return NULL;
+		exit(1);
 	}
 	close(fd);
 	clock_gettime(CLOCK_MONOTONIC, &tend);
 
 	unlink("test.ping");
-	fprintf(stderr, "wrote: %ld\n", byteswritten);
+	//fprintf(stderr, "wrote: %ld\n", byteswritten);
 
 	timediff_t *delta = (timediff_t*)malloc(sizeof(timediff_t));
 	if(delta == NULL) {
@@ -56,7 +56,19 @@ timediff_t *do_ping() {
 
 int main(int argc, char** argv) {
 
-	double total;
+	if(argc > 1) {
+		if(strcmp(argv[1], "config") == 0) {
+			printf("graph_title Naive IO latency\n"
+					"graph_category disk\n"
+					"graph_info Runs a naive IO latency test and shows the results in nanoseconds, source code available at https://github.com/vmp32k/naive-ioping\n"
+					"graph_vlabel nanoseconds\n"
+					"nano.label nanoseconds\n");
+			exit(0);
+		}
+		return 0;
+	}
+
+	double total = 0;
 	timediff_t* runs[NUM_IOPING_RUNS];
 
 	for(int i = 0; i < NUM_IOPING_RUNS; ++i) {
@@ -71,7 +83,7 @@ int main(int argc, char** argv) {
 	}
 
 	total = total / NUM_IOPING_RUNS;	
-	printf("nanoseconds: %0.lf\n", total);
+	printf("nano.value %0.lf\n", total);
 
 	for(int i = 0; i < NUM_IOPING_RUNS; ++i) {
 		free(runs[i]);
