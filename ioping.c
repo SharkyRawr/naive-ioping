@@ -96,6 +96,7 @@ int main(int argc, char** argv) {
 	for(int i = 0; i < NUM_IOPING_RUNS; ++i) {
 		free(runs[i]);
 	}
+	free(aligned_buffer);
 
 	return 0;
 }
