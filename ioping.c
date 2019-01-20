@@ -1,76 +1,82 @@
-#define NUM_IOPING_RUNS 3
-#define SLEEP_BETWEEN_RUNS 1 // in seconds
-#define PING_PATH "/var/tmp/test.ping"
-
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <time.h>
-#include <errno.h>
 #include <string.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
+#include "common.h"
 
-#include "random_bytes.h"
-
-typedef struct {
-	double diffsec;
-	double diffnano;
-} timediff_t;
-
-static struct timespec tstart, tend;
 static void* aligned_buffer;
+uint32_t count = 4, interval = 1;
+uint64_t pinglen = 1024*1024*1; // @todo customizable
+char *pingPath = "/var/tmp/ping.tmp";
 
-timediff_t *do_ping() {
-	
-	int fd = open(PING_PATH, O_CREAT|O_WRONLY|O_DIRECT|O_SYNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-	if(fd == -1) {
-		fprintf(stderr, "Unable to open test.ping file!\n");
-		fprintf(stderr, "Errno: %d %s\n", errno, strerror(errno));
-		exit(1);
-	}
-
-	clock_gettime(CLOCK_MONOTONIC, &tstart);
-	ssize_t byteswritten = write(fd, aligned_buffer, ___rand_bin_len);
-	if(byteswritten == -1) {
-		unlink(PING_PATH);
-		fprintf(stderr, "Unable to write bytes!\nerrno: %d %s\n", errno, strerror(errno));
-		exit(1);
-	}
-	clock_gettime(CLOCK_MONOTONIC, &tend);
-	close(fd);
-
-	unlink(PING_PATH);
-	//fprintf(stderr, "wrote: %ld\n", byteswritten);
-
-	timediff_t *delta = (timediff_t*)malloc(sizeof(timediff_t));
-	if(delta == NULL) {
-		fprintf(stderr, "Failed to allocate memory!\n");
-		exit(1);
-	}
-
-	delta->diffsec = tend.tv_sec - tstart.tv_sec;
-	delta->diffnano = tend.tv_nsec - tstart.tv_nsec;
-
-	return delta;
+void printHelp() {
+    printf("naive-ioping - v1.0 by Hendrik 'Sharky' Schumann - sharky@sharky.pw\n"
+    "usage:\n"
+    "  ioping [-c --count count (default: 4)] [-i --interval interval (default: 1)]\n"
+    "         [-p --path path (default: /var/tmp/ping.tmp)]\n");
 }
 
 int main(int argc, char** argv) {
+    pinglen = ___rand_bin_len; // @todo customizable
+
 	if(argc > 1) {
-		if(strcmp(argv[1], "config") == 0) {
-			printf("graph_title Naive IO latency\n"
-					"graph_args --base 1000 -l 0\n"
-					"graph_scale yes\n"
-					"graph_category disk\n"
-					"graph_info Runs a naive IO latency test with nanosecond accuracy (usually only as accurate as the platform allows), source code available at https://gitlab.com/Sharky/naive-ioping\n"
-					"graph_vlabel latency in seconds\n"
-					"sec.label seconds\n");
-			exit(0);
-		}
-		return 0;
+		for(int i = 1; i < argc; i++) {
+            if(strcmp(argv[i], "--help") == 0 ||
+                strcmp(argv[i], "-h") == 0) {
+                printHelp();
+                return 0;
+            }
+
+            if(strcmp(argv[i], "--count") == 0 ||
+                strcmp(argv[i], "-c") == 0) {
+                    if(argc <= i+1) {
+                        continue;
+                    }
+                    count = atoi(argv[i+1]);
+                    if(count <= 0) count = 1;
+                    ++i;
+                    continue;
+                }
+
+            if(strcmp(argv[i], "--interval") == 0 ||
+                strcmp(argv[i], "-i") == 0) {
+                    if(argc <= i+1) {
+                        continue;
+                    }
+                    interval = atoi(argv[i+1]);
+                    if(interval < 0) interval = 0;
+                    ++i;
+                    continue;
+                }
+
+            if(strcmp(argv[i], "--path") == 0 ||
+                strcmp(argv[i], "-p") == 0) {
+                    if(argc <= i+1) {
+                        continue;
+                    }
+                    pingPath = argv[i+1];
+                    ++i;
+                    continue;
+                }
+        }
 	}
+
+    if(count == 1) {
+        printf("Give me a ping, Vasili. One ping only, please.\n");
+    } else {
+        printf("%u ioping(s)\n", count);
+    }
+
+    printf("Path to file used for ioping: %s\n", pingPath);
+
+    // check if there already is a file at pingPath, we don't want to overwrite anything important
+    int accessTest = access(pingPath, F_OK);
+    if(accessTest == 0) {
+        printf("The file seems to exist! Aborting ...\n");
+        exit(1);
+    }
 	
 	if( posix_memalign(&aligned_buffer, ___rand_bin_len, ___rand_bin_len) != 0) {
 		fprintf(stderr, "Unable to align buffer!\nerrno: %d %s\n", errno, strerror(errno));
@@ -82,24 +88,33 @@ int main(int argc, char** argv) {
 		exit(1);
 	}
 
-	double total = 0;
-	timediff_t* runs[NUM_IOPING_RUNS];
+	double total = 0, maxTime = -1, minTime = (unsigned int)~0;
+	timediff_t* runs[count];
 
-	for(int i = 0; i < NUM_IOPING_RUNS; ++i) {
-		timediff_t *r = runs[i] = do_ping();
+	for(int i = 0; i < count; ++i) {
+		timediff_t *r = runs[i] = do_ping((const void*)aligned_buffer, pingPath);
 		if(r == NULL) {
 			fprintf(stderr, "ioping returned NULL?!\n");
 			exit(1);
 		}
+        
+        double val = (r->diffsec * 1e9) + r->diffnano;
+        if(val > maxTime) maxTime = val;
+        if(val < minTime) minTime = val;
+
+        printf("%u bytes from %s, seq=%d, time=%lf ms\n", ___rand_bin_len, pingPath, i + 1, ((r->diffsec * 1e9) + r->diffnano)*1e-9);
 
 		total += (r->diffsec * 1e9) + r->diffnano;
-		sleep(SLEEP_BETWEEN_RUNS);
+        if(count > 1) sleep(interval);
 	}
 
-	total = (total / (double)NUM_IOPING_RUNS) * 1e-9;
-	printf("sec.value %lf\n", total);
+    printf("\n--- ioping statistics ---\n");
 
-	for(int i = 0; i < NUM_IOPING_RUNS; ++i) {
+	double averageTime = (total / (double)count);
+	printf("%d iopings written, time %lf ms\n", count, total * 1e-9);
+    printf("min/avg/max %lf/%lf/%lf ms\n", minTime * 1e-9, averageTime * 1e-9, maxTime * 1e-9);
+
+	for(int i = 0; i < count; ++i) {
 		free(runs[i]);
 	}
 	free(aligned_buffer);
