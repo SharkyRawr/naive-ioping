@@ -9,7 +9,7 @@
 
 static void* aligned_buffer;
 uint32_t count = 4, interval = 1;
-uint64_t pinglen = 20; // @todo customizable
+uint64_t pinglen = 1024*1024; // @todo customizable
 char *pingPath = "/var/tmp/ping.tmp";
 
 void printHelp() {
