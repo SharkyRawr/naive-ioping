@@ -9,8 +9,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "random_bytes.h"
-
 #define PING_PATH "/var/tmp/test.ping"
 
 typedef struct {
@@ -19,3 +17,4 @@ typedef struct {
 } timediff_t;
 
 timediff_t *do_ping();
+size_t get_random_data(void* buf, size_t len);

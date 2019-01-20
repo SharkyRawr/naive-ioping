@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "common.h"
+#include "random_bytes.h"
 
 static void* aligned_buffer;
 
@@ -39,7 +40,7 @@ int main(int argc, char** argv) {
 	timediff_t* runs[NUM_IOPING_RUNS];
 
 	for(int i = 0; i < NUM_IOPING_RUNS; ++i) {
-		timediff_t *r = runs[i] = do_ping((const void*)aligned_buffer);
+		timediff_t *r = runs[i] = do_ping((const void*)aligned_buffer, ___rand_bin_len, PING_PATH);
 		if(r == NULL) {
 			fprintf(stderr, "ioping returned NULL?!\n");
 			exit(1);

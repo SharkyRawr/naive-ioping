@@ -2,7 +2,7 @@
 
 static struct timespec tstart, tend;
 
-timediff_t *do_ping(const void *aligned_buffer, const char* pingPath) {
+timediff_t *do_ping(const void *aligned_buffer, const size_t len, const char* pingPath ) {
 	
 	int fd = open(pingPath, O_CREAT|O_WRONLY|O_DIRECT|O_SYNC, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 	if(fd == -1) {
@@ -12,7 +12,7 @@ timediff_t *do_ping(const void *aligned_buffer, const char* pingPath) {
 	}
 
 	clock_gettime(CLOCK_MONOTONIC, &tstart);
-	ssize_t byteswritten = write(fd, aligned_buffer, ___rand_bin_len);
+	ssize_t byteswritten = write(fd, aligned_buffer, len);
 	if(byteswritten == -1) {
 		unlink(pingPath);
 		fprintf(stderr, "Unable to write bytes!\nerrno: %d %s\n", errno, strerror(errno));
@@ -34,4 +34,21 @@ timediff_t *do_ping(const void *aligned_buffer, const char* pingPath) {
 	delta->diffnano = tend.tv_nsec - tstart.tv_nsec;
 
 	return delta;
+}
+
+size_t get_random_data(void* buf, size_t len) {
+	FILE *f = fopen("/dev/urandom", "rb");
+	if(!f) {
+		fprintf(stderr, "Unable to open /dev/urandom as a random data source!\n");
+		exit(1);
+	}
+
+	size_t numread = fread(buf, 1, len, f);
+	if(numread != len) {
+		fprintf(stderr, "Expected %d bytes read, got %d! (/dev/urandom)\n", len, numread);
+		exit(1);
+	}
+
+	fclose(f);
+	return numread;
 }
