@@ -1,3 +1,5 @@
+[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/W7W52AOXC)
+
 # naive-IOping #
 
 This is a simple tool (and munin plugin) to measure HDD latency with high accuracy.
@@ -54,4 +56,5 @@ systemctl restart munin-node
 
 #### Tips: ####
 
-- Bitcoin: 1CPqeySrvHxxejok9iY4caYHCMaUxr9VEQ
+[![ko-fi](https://www.ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/W7W52AOXC)
+
